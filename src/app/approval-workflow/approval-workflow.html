@@ -1,0 +1,146 @@
+<div class="workflow-container">
+  <div class="header">
+    <h2>Loan Application Approval Workflow</h2>
+    <button (click)="goBack()" class="btn btn-secondary">Back to Dashboard</button>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="success" class="success-message">
+    {{ success }}
+  </div>
+
+  <!-- Application Details -->
+  <div *ngIf="application" class="application-summary">
+    <h3>Application Details</h3>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <span class="label">Applicant:</span>
+        <span class="value">{{ application.applicantName }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Loan Amount:</span>
+        <span class="value">₹{{ application.loanAmount | number }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Tenure:</span>
+        <span class="value">{{ application.tenure }} months</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Income:</span>
+        <span class="value">₹{{ application.income | number }}</span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Status:</span>
+        <span class="status" [class]="getStatusClass(application.status!)">
+          {{ application.status }}
+        </span>
+      </div>
+      <div class="summary-item">
+        <span class="label">Submitted:</span>
+        <span class="value">{{ application.submissionDate | date:'medium' }}</span>
+      </div>
+    </div>
+    <div class="contact-details">
+      <span class="label">Contact Details:</span>
+      <div class="contact-text">{{ application.contactDetails }}</div>
+    </div>
+  </div>
+
+  <!-- Approval Steps -->
+  <div *ngIf="!loading && approvalSteps.length > 0" class="approval-steps">
+    <h3>Approval Steps</h3>
+    
+    <div class="steps-timeline">
+      <div 
+        *ngFor="let step of approvalSteps; let i = index" 
+        class="step-card" 
+        [class]="'step-' + step.status.toLowerCase()">
+        
+        <div class="step-header">
+          <div class="step-info">
+            <span class="step-number">{{ step.stepOrder }}</span>
+            <h4>{{ step.stepName }}</h4>
+          </div>
+          <span class="status" [class]="getStatusClass(step.status)">
+            {{ step.status }}
+          </span>
+        </div>
+        
+        <div class="step-details">
+          <div class="detail-row">
+            <span class="label">Created:</span>
+            <span class="value">{{ step.createdDate | date:'medium' }}</span>
+          </div>
+          
+          <div *ngIf="step.updatedDate" class="detail-row">
+            <span class="label">Updated:</span>
+            <span class="value">{{ step.updatedDate | date:'medium' }}</span>
+          </div>
+          
+          <div *ngIf="step.updatedBy" class="detail-row">
+            <span class="label">Updated by:</span>
+            <span class="value">{{ step.updatedBy.fullName || step.updatedBy.username }}</span>
+          </div>
+          
+          <div *ngIf="step.comments" class="detail-row">
+            <span class="label">Comments:</span>
+            <div class="comments">{{ step.comments }}</div>
+          </div>
+        </div>
+        
+        <div *ngIf="step.status === 'PENDING' && isAdmin()" class="step-actions">
+          <button (click)="openUpdateModal(step)" class="btn btn-primary">
+            Update Step
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    Loading approval workflow...
+  </div>
+</div>
+
+<!-- Update Modal -->
+<div *ngIf="selectedStep" class="modal-overlay" (click)="closeUpdateModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Update {{ selectedStep.stepName }}</h3>
+      <button (click)="closeUpdateModal()" class="close-btn">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Status:</label>
+        <select [(ngModel)]="updateStatus" class="form-control" required>
+          <option value="">Select Status</option>
+          <option value="APPROVED">Approve</option>
+          <option value="REJECTED">Reject</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Comments:</label>
+        <textarea 
+          [(ngModel)]="updateComments" 
+          class="form-control" 
+          rows="4"
+          placeholder="Enter comments (optional)"></textarea>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button (click)="closeUpdateModal()" class="btn btn-secondary">Cancel</button>
+      <button 
+        (click)="updateStep()" 
+        [disabled]="!updateStatus || updating"
+        class="btn btn-primary">
+        {{ updating ? 'Updating...' : 'Update Step' }}
+      </button>
+    </div>
+  </div>
+</div>

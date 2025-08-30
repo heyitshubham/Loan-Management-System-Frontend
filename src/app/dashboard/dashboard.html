@@ -1,0 +1,85 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1>Loan Management Dashboard</h1>
+      <div class="user-info">
+        <span *ngIf="user">Welcome, {{ user.fullName || user.username }} 
+          <span *ngIf="isAdmin()" class="admin-badge">(Admin)</span>
+        </span>
+        <button (click)="logout()" class="btn btn-secondary">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="dashboard-content">
+    <div class="actions-section">
+      <button (click)="newApplication()" class="btn btn-primary">
+        New Loan Application
+      </button>
+      <button (click)="loadApplications()" class="btn btn-secondary">
+        Refresh
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="loading">
+      Loading applications...
+    </div>
+
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+    </div>
+
+    <div *ngIf="!loading && applications.length === 0 && !error" class="no-applications">
+      <h3>No loan applications found</h3>
+      <p>Click "New Loan Application" to submit your first application.</p>
+    </div>
+
+    <div *ngIf="!loading && applications.length > 0" class="applications-section">
+      <h2>{{ isAdmin() ? 'All Loan Applications' : 'Your Loan Applications' }}</h2>
+      
+      <div class="applications-grid">
+        <div 
+          *ngFor="let application of applications" 
+          class="application-card"
+          (click)="viewApplication(application.id!)">
+          
+          <div class="card-header">
+            <h3>{{ application.applicantName }}</h3>
+            <span class="status" [class]="getStatusClass(application.status!)">
+              {{ application.status }}
+            </span>
+          </div>
+          
+          <div class="card-body">
+            <div class="application-details">
+              <div class="detail">
+                <span class="label">Loan Amount:</span>
+                <span class="value">₹{{ application.loanAmount | number }}</span>
+              </div>
+              <div class="detail">
+                <span class="label">Tenure:</span>
+                <span class="value">{{ application.tenure }} months</span>
+              </div>
+              <div class="detail">
+                <span class="label">Income:</span>
+                <span class="value">₹{{ application.income | number }}</span>
+              </div>
+              <div class="detail">
+                <span class="label">Submitted:</span>
+                <span class="value">{{ application.submissionDate | date:'short' }}</span>
+              </div>
+              <div *ngIf="isAdmin() && application.submittedBy" class="detail">
+                <span class="label">Submitted by:</span>
+                <span class="value">{{ application.submittedBy.fullName || application.submittedBy.username }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-footer">
+            <span class="view-link">Click to view details →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
